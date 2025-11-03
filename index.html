@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz AKW Sesi 1: Struktur Pentadbiran</title>
+    <!-- Muatnaik Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Muatnaik Fon Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Kelas untuk jawapan yang betul dan salah */
+        .correct-answer {
+            background-color: #d1fae5; /* bg-green-100 */
+            border-color: #10b981; /* border-green-500 */
+        }
+        .wrong-answer {
+            background-color: #fee2e2; /* bg-red-100 */
+            border-color: #ef4444; /* border-red-500 */
+        }
+        /* Kelas untuk butang yang dilumpuhkan selepas menjawab */
+        .disabled-option {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        /* Sembunyikan anak panah pada input nombor */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Tambah gaya untuk butang padam */
+        .delete-button {
+            background-color: #fee2e2; /* bg-red-100 */
+            color: #b91c1c; /* text-red-800 */
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 600; /* font-semibold */
+            padding: 0.25rem 0.5rem; /* px-2 py-1 */
+            border-radius: 0.375rem; /* rounded-md */
+            transition: background-color 0.2s;
+        }
+        .delete-button:hover {
+            background-color: #fecaca; /* bg-red-200 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div id="app" class="max-w-2xl w-full bg-white p-6 md:p-8 rounded-2xl shadow-lg relative overflow-hidden">
+
+        <!-- Skrin Mula -->
+        <div id="start-screen" class="screen">
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">Selamat Datang</h1>
+            <p class="text-center text-gray-600 mb-6 text-lg">Kuiz AKW Sesi 1: Struktur Pentadbiran</p>
+            <div class="mb-4">
+                <label for="name-input" class="block text-sm font-medium text-gray-700 mb-2">Sila masukkan nama anda:</label>
+                <input type="text" id="name-input" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-3" placeholder="Nama Penuh">
+                <p id="name-error" class="text-red-500 text-sm mt-1 hidden">Sila masukkan nama anda untuk bermula.</p>
+            </div>
+            <button id="start-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 text-lg">
+                Mula Kuiz
+            </button>
+            <button id="admin-toggle-button" class="w-full text-xs text-center text-gray-400 hover:text-gray-600 mt-4">
+                Admin Access
+            </button>
+        </div>
+
+        <!-- Skrin Kuiz -->
+        <div id="quiz-screen" class="screen hidden">
+            <p id="progress-text" class="text-sm text-gray-500 mb-2 font-medium">Soalan 1 dari 23</p>
+            <h2 id="question-text" class="text-xl md:text-2xl font-semibold text-gray-900 mb-6"></h2>
+            <div id="options-container" class="space-y-3">
+                <!-- Pilihan jawapan akan dijana oleh JS di sini -->
+            </div>
+            <p id="feedback-message" class="mt-4 text-sm font-medium"></p>
+            <button id="next-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 mt-6 hidden">
+                Soalan Seterusnya
+            </button>
+        </div>
+
+        <!-- Skrin Keputusan -->
+        <div id="result-screen" class="screen hidden text-center">
+            <h2 id="result-greeting" class="text-3xl font-bold text-gray-800 mb-2"></h2>
+            <p class="text-lg text-gray-600 mb-4">Kuiz anda telah selesai.</p>
+            <div class="bg-gray-50 p-6 rounded-xl mb-6">
+                <p class="text-xl text-gray-700">Skor anda:</p>
+                <p id="result-score" class="text-6xl font-extrabold text-blue-600 my-2"></p>
+                <p id="result-percentage" class="text-2xl font-semibold text-gray-800"></p>
+                <p id="result-feedback" class="text-lg font-medium text-gray-600 mt-3"></p>
+                <p id="anon-name-display" class="text-sm font-medium text-gray-500 mt-2"></p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button id="leaderboard-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                    Lihat Leaderboard
+                </button>
+                <button id="restart-button" class="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                    Cuba Lagi
+                </button>
+            </div>
+            <button id="admin-panel-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 mt-3 hidden">
+                Panel Admin
+            </button>
+        </div>
+
+        <!-- Skrin Leaderboard -->
+        <div id="leaderboard-screen" class="screen hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Leaderboard (Top 10)</h2>
+            <div id="leaderboard-list" class="space-y-2 max-h-96 overflow-y-auto">
+                <p class="text-gray-500">Memuatkan data...</p>
+                <!-- Senarai leaderboard akan dijana oleh JS -->
+            </div>
+            <button class="back-button w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 mt-6">
+                Kembali
+            </button>
+        </div>
+
+        <!-- Skrin Admin -->
+        <div id="admin-screen" class="screen hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Panel Admin (Semua Penyerahan)</h2>
+            <div id="admin-list" class="space-y-2 max-h-96 overflow-y-auto">
+                <p class="text-gray-500">Memuatkan data...</p>
+                <!-- Senarai admin akan dijana oleh JS -->
+            </div>
+            <button class="back-button w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 mt-6">
+                Kembali
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Modal Admin -->
+    <div id="admin-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Akses Admin</h3>
+            <label for="admin-password" class="block text-sm font-medium text-gray-700 mb-2">Masukkan Kata Laluan:</label>
+            <input type="password" id="admin-password" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-3">
+            <p id="admin-error" class="text-red-500 text-sm mt-1 hidden">Kata laluan salah.</p>
+            <div class="mt-4 flex justify-end space-x-2">
+                <button id="admin-cancel-button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Batal
+                </button>
+                <button id="admin-login-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Masuk
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- IMPORT FIREBASE ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, query, onSnapshot, setLogLevel, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DATA KUIZ ---
+        const allQuestions = [
+            // BAHAGIAN 1: MUDAH (9 Soalan)
+            {
+                question: "Tiga cabang utama kuasa dalam sistem Demokrasi Berparlimen di Malaysia ialah:",
+                options: [
+                    "Perdana Menteri, Menteri Besar, dan Datuk Bandar",
+                    "Perundangan (Legislatif), Pentadbiran (Eksekutif), dan Kehakiman (Judisiari)",
+                    "Kerajaan Persekutuan, Kerajaan Negeri, dan Kerajaan Tempatan",
+                    "Yang di-Pertuan Agong, Majlis Raja-Raja, dan Parlimen"
+                ],
+                answer: 1
+            },
+            {
+                question: "Berapakah bilangan Bahagian dan Perkara yang terkandung dalam Perlembagaan Persekutuan?",
+                options: [
+                    "10 Bahagian, 150 Perkara",
+                    "12 Bahagian, 181 Perkara",
+                    "15 Bahagian, 183 Perkara",
+                    "18 Bahagian, 201 Perkara"
+                ],
+                answer: 2
+            },
+            {
+                question: "(Situasi) Seorang penjawat awam di sebuah kementerian ditugaskan untuk melaksanakan dasar baharu yang diluluskan oleh Parlimen. Cabang kuasa manakah yang diwakilinya?",
+                options: [
+                    "Kehakiman (Judisiari)",
+                    "Pentadbiran (Eksekutif)",
+                    "Perundangan (Legislatif)",
+                    "Kerajaan Tempatan"
+                ],
+                answer: 1
+            },
+            {
+                question: "(Situasi) Encik Ahmad, seorang graduan berumur 20 tahun, ingin bertanding dalam Pilihan Raya Umum untuk kerusi Parlimen. Adakah beliau layak untuk menjadi ahli Dewan Rakyat?",
+                options: [
+                    "Ya, kerana had umur minimum ialah 18 tahun",
+                    "Tidak, kerana had umur minimum ialah 21 tahun",
+                    "Tidak, kerana had umur minimum ialah 30 tahun",
+                    "Ya, tetapi hanya dengan kebenaran khas YDPA"
+                ],
+                answer: 0
+            },
+            {
+                question: "Hierarki pentadbiran Kerajaan Malaysia terbahagi kepada berapa peringkat utama?",
+                options: [
+                    "Dua: Persekutuan dan Negeri",
+                    "Tiga: Persekutuan, Negeri, dan Tempatan",
+                    "Empat: Persekutuan, Negeri, Daerah, dan Mukim",
+                    "Dua: Eksekutif dan Legislatif"
+                ],
+                answer: 1
+            },
+            {
+                question: "Siapakah yang melantik Perdana Menteri Malaysia?",
+                options: [
+                    "Jemaah Menteri",
+                    "Parlimen",
+                    "Yang di-Pertuan Agong",
+                    "Majlis Raja-Raja"
+                ],
+                answer: 2
+            },
+            {
+                question: "Di negeri-negeri yang mengamalkan sistem beraja, pelantikan Menteri Besar dibuat oleh:",
+                options: [
+                    "Perdana Menteri",
+                    "Raja / Sultan",
+                    "Dewan Undangan Negeri",
+                    "Setiausaha Kerajaan Negeri"
+                ],
+                answer: 1
+            },
+            {
+                question: "(Situasi) Sebuah PBT bercadang untuk menukar had laju di jalan perbandaran dan mewartakan undang-undang kecil baharu. PBT tersebut perlu merujuk kepada bidang kuasa...",
+                options: [
+                    "Kerajaan Persekutuan",
+                    "Parlimen",
+                    "Pejabat Perdana Menteri",
+                    "Kerajaan Negeri"
+                ],
+                answer: 3
+            },
+            {
+                question: "Siapakah pegawai tertinggi perkhidmatan awam di peringkat negeri yang juga bertindak sebagai penasihat kepada Menteri Besar dan MMKN?",
+                options: [
+                    "Menteri Besar",
+                    "Pegawai Kewangan Negeri",
+                    "Setiausaha Kerajaan Negeri",
+                    "Penasihat Undang-Undang Negeri"
+                ],
+                answer: 2
+            },
+            // BAHAGIAN 2: SEDERHANA (9 Soalan)
+            {
+                question: "Antara berikut, yang manakah *bukan* salah satu daripada empat perkara yang dilarang diubah dalam Perlembagaan Persekutuan?",
+                options: [
+                    "Agama Islam",
+                    "Bahasa Melayu",
+                    "Dasar Ekonomi Baru",
+                    "Kedudukan Istimewa Raja-Raja Melayu"
+                ],
+                answer: 2
+            },
+            {
+                question: "(Situasi) Kerajaan Negeri Selangor ingin memperluaskan program kebajikan masyarakat, tetapi mendapati Kerajaan Persekutuan juga mempunyai inisiatif serupa. Ini adalah kerana 'Kebajikan Sosial' terletak di bawah:",
+                options: [
+                    "Senarai Persekutuan",
+                    "Senarai Negeri",
+                    "Senarai Bersama",
+                    "Senarai Khas"
+                ],
+                answer: 2
+            },
+            {
+                question: "(Situasi) Sebuah syarikat pemaju ingin memohon kebenaran untuk membersihkan kawasan hutan bagi tujuan pertanian di Selangor. Pihak berkuasa utama yang mengawal kelulusan ini ialah:",
+                options: [
+                    "Kerajaan Persekutuan (kerana berkaitan alam sekitar)",
+                    "Kerajaan Negeri (kerana Perhutanan dan Tanah adalah Senarai Negeri)",
+                    "Pihak Berkuasa Tempatan (kerana ia di dalam kawasan PBT)",
+                    "Pejabat Perdana Menteri (kerana ia projek berskala besar)"
+                ],
+                answer: 1
+            },
+            {
+                question: "Manakah antara berikut *bukan* merupakan bidang kuasa Yang di-Pertuan Agong?",
+                options: [
+                    "Mengisytiharkan Darurat",
+                    "Melantik Jemaah Menteri atas nasihat Perdana Menteri",
+                    "Mengetaui Majlis Mesyuarat Kerajaan Negeri (MMKN)",
+                    "Menjadi Ketua Tertinggi Angkatan Bersenjata"
+                ],
+                answer: 2
+            },
+            {
+                question: "(Situasi) Puan Zara, seorang CEO berumur 35 tahun, telah dicalonkan untuk mewakili persatuan profesional di peringkat Persekutuan. Beliau layak dilantik sebagai ahli:",
+                options: [
+                    "Dewan Rakyat (kerana berumur lebih 18 tahun)",
+                    "Dewan Negara (kerana berumur 30 tahun ke atas)",
+                    "Jemaah Menteri sahaja",
+                    "Dewan Undangan Negeri sahaja"
+                ],
+                answer: 1
+            },
+            {
+                question: "Dalam mesyuarat MMKN, selain daripada Ahli EXCO, 3 pegawai kerajaan (ex-officio) turut hadir untuk memberi nasihat. Siapakah mereka?",
+                options: [
+                    "SUK, Pegawai Kewangan Negeri, dan Pengarah UPEN",
+                    "SUK, Pegawai Kewangan Negeri, dan Penasihat Undang-Undang Negeri",
+                    "Pengarah UPEN, Pegawai Kewangan Negeri, dan Pegawai Daerah",
+                    "SUK, Ketua Polis Negeri, dan Penasihat Undang-Undang Negeri"
+                ],
+                answer: 1
+            },
+            {
+                question: "Apakah yang akan berlaku sekiranya undang-undang yang digubal oleh Dewan Undangan Negeri (DUN) didapati bercanggah dengan undang-undang Persekutuan?",
+                options: [
+                    "Undang-undang Persekutuan itu akan terbatal",
+                    "Undang-undang DUN itu akan terbatal",
+                    "Kedua-dua undang-undang perlu dibahaskan di Mahkamah Persekutuan",
+                    "Undang-undang DUN itu hanya terpakai di dalam negeri tersebut"
+                ],
+                answer: 1
+            },
+            {
+                question: "(Situasi) Majlis Perbandaran Sepang ingin menguatkuasakan larangan meletak kenderaan di zon tertentu dan mengenakan kompaun. Apakah instrumen perundangan yang membolehkan mereka berbuat demikian?",
+                options: [
+                    "Undang-undang kecil (by-laws)",
+                    "Akta Parlimen",
+                    "Perintah Menteri Besar",
+                    "Notis Pekeliling SUK"
+                ],
+                answer: 0
+            },
+            {
+                question: "Apakah fungsi utama Unit Perancang Ekonomi (UPEN) di peringkat negeri?",
+                options: [
+                    "Meluluskan lesen perniagaan dan permit",
+                    "Menasihati Sultan berkenaan hal ehwal undang-undang",
+                    "Merancang pembangunan ekonomi 5 tahun dan menyelaras program pembangunan",
+                    "Mengutip cukai taksiran dan cukai tanah"
+                ],
+                answer: 2
+            },
+            // BAHAGIAN 3: SUKAR / SITUASI (5 Soalan)
+            {
+                question: "Sebuah PBT di Selangor mempunyai jumlah penduduk seramai 250,000 orang dan berjaya mencatatkan hasil tahunan sebanyak RM35 juta. Berdasarkan Matriks Perbandingan Kategori PBT, apakah status PBT ini?",
+                options: [
+                    "Majlis Daerah",
+                    "Majlis Perbandaran",
+                    "Majlis Bandaraya",
+                    "PBT Bertaraf Khas"
+                ],
+                answer: 1
+            },
+            {
+                question: "Apakah kriteria minimum yang perlu dipenuhi oleh sebuah PBT untuk dinaik taraf kepada status Majlis Bandaraya?",
+                options: [
+                    "Penduduk > 150,000 orang dan Hasil Tahunan > RM20 juta",
+                    "Penduduk > 500,000 orang dan Hasil Tahunan > RM20 juta",
+                    "Penduduk > 500,000 orang dan Hasil Tahunan > RM100 juta",
+                    "Penduduk > 1,000,000 orang dan Hasil Tahunan > RM100 juta"
+                ],
+                answer: 2
+            },
+            {
+                question: "(Situasi) Puan Halimah, seorang pemimpin wanita di sebuah Majlis Perbandaran, ingin mengusulkan projek pusat riadah komuniti. Beliau mendapati projek ini akan meningkatkan hasil tahunan PBT daripada RM18 juta kepada RM22 juta. Apakah implikasi utama peningkatan hasil ini kepada status PBT tersebut?",
+                options: [
+                    "Ia kini memenuhi salah satu kriteria utama untuk status Majlis Perbandaran.",
+                    "Ia akan membolehkan PBT itu terus dinaik taraf ke Majlis Bandaraya.",
+                    "Ia tidak memberi apa-apa kesan kepada status PBT.",
+                    "Ia membolehkan PBT mengambil alih fungsi Majlis Daerah yang berdekatan."
+                ],
+                answer: 0
+            },
+            {
+                question: "(Situasi) Sebagai seorang ADUN, anda ingin mencadangkan satu inisiatif baharu berkaitan skim biasiswa untuk belia di negeri anda. Walau bagaimanapun, anda sedar bahawa Kerajaan Persekutuan juga mempunyai program biasiswa. Sebagai seorang pemimpin, anda perlu tahu bahawa bidang kuasa 'Biasiswa' terletak di bawah:",
+                options: [
+                    "Senarai Persekutuan sahaja",
+                    "Senarai Negeri sahaja",
+                    "Senarai Bersama",
+                    "Senarai Pihak Berkuasa Tempatan"
+                ],
+                answer: 2
+            },
+            {
+                question: "(Situasi) Sebuah PBT ingin menggubal undang-undang kecil baharu berkaitan pelesenan penjaja makanan untuk meningkatkan kebersihan. Sebagai YDP PBT, anda perlu faham bahawa kuasa untuk 'Pelesenan panggung wayang dan tempat hiburan' dan 'Perkhidmatan lain bercorak tempatan' terletak di bawah:",
+                options: [
+                    "Senarai Persekutuan",
+                    "Senarai Negeri",
+                    "Senarai Bersama",
+                    "Bidang kuasa Menteri Besar"
+                ],
+                answer: 1
+            }
+        ];
+
+        // --- NAMA RAWAK UNTUK LEADERBOARD ---
+        const adjectives = ["Berani", "Cepat", "Bijak", "Pantas", "Gagah", "Setia", "Cekal", "Jujur", "Ikhlas", "Kreatif"];
+        const animals = ["Singa", "Harimau", "Helang", "Kancil", "Gajah", "Rusa", "Kenari", "Badak", "Kuda", "Penyu"];
+
+        // --- PEMBOLEHUBAH STATE ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userName = "";
+        let db, auth, userId;
+        let submissionsListener = null; // Untuk menyimpan 'unsubscribe' onSnapshot
+
+        // --- RUJUKAN ELEMEN DOM ---
+        const screens = document.querySelectorAll('.screen');
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const leaderboardScreen = document.getElementById('leaderboard-screen');
+        const adminScreen = document.getElementById('admin-screen');
+
+        const nameInput = document.getElementById('name-input');
+        const nameError = document.getElementById('name-error');
+        const startButton = document.getElementById('start-button');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+        const leaderboardButton = document.getElementById('leaderboard-button');
+        const adminPanelButton = document.getElementById('admin-panel-button');
+        const adminToggleButton = document.getElementById('admin-toggle-button');
+        const backButtons = document.querySelectorAll('.back-button');
+
+        const progressText = document.getElementById('progress-text');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+
+        const resultGreeting = document.getElementById('result-greeting');
+        const resultScore = document.getElementById('result-score');
+        const resultPercentage = document.getElementById('result-percentage');
+        const resultFeedback = document.getElementById('result-feedback');
+        const anonNameDisplay = document.getElementById('anon-name-display');
+        
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const adminList = document.getElementById('admin-list');
+
+        // Modal Admin
+        const adminModal = document.getElementById('admin-modal');
+        const adminPasswordInput = document.getElementById('admin-password');
+        const adminError = document.getElementById('admin-error');
+        const adminCancelButton = document.getElementById('admin-cancel-button');
+        const adminLoginButton = document.getElementById('admin-login-button');
+
+        // --- FUNGSI-FUNGSI ---
+
+        // Fungsi untuk menukar skrin
+        function showScreen(screenId) {
+            screens.forEach(screen => {
+                if (screen.id === screenId) {
+                    screen.classList.remove('hidden');
+                } else {
+                    screen.classList.add('hidden');
+                }
+            });
+        }
+
+        // Fungsi untuk menjana nama rawak
+        function generateAnonymousName() {
+            const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const animal = animals[Math.floor(Math.random() * animals.length)];
+            return `${adj} ${animal}`;
+        }
+
+        // Fungsi untuk memulakan Firebase & Auth
+        async function initializeFirebase() {
+            try {
+                // Gunakan pembolehubah global
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+                const firebaseConfig = JSON.parse(firebaseConfigStr);
+
+                if (!firebaseConfig.apiKey) {
+                    console.error("Konfigurasi Firebase tidak dijumpai.");
+                    return;
+                }
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('Debug'); // Untuk debugging Firebase
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("User UID:", userId);
+                    } else {
+                        try {
+                            const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                            if (authToken) {
+                                await signInWithCustomToken(auth, authToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (authError) {
+                            console.error("Gagal mendaftar masuk:", authError);
+                        }
+                    }
+                });
+
+            } catch (e) {
+                console.error("Ralat semasa memulakan Firebase:", e);
+            }
+        }
+
+        // Fungsi untuk memulakan kuiz
+        function startQuiz() {
+            userName = nameInput.value.trim();
+            if (userName === "") {
+                nameError.classList.remove('hidden');
+                nameInput.classList.add('border-red-500');
+            } else {
+                nameError.classList.add('hidden');
+                nameInput.classList.remove('border-red-500');
+                showScreen('quiz-screen');
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        // Fungsi untuk memaparkan soalan
+        function loadQuestion(index) {
+            const q = allQuestions[index];
+            progressText.textContent = `Soalan ${index + 1} dari ${allQuestions.length}`;
+            questionText.textContent = q.question;
+            
+            optionsContainer.innerHTML = "";
+            feedbackMessage.textContent = "";
+            feedbackMessage.className = "mt-4 text-sm font-medium";
+            nextButton.classList.add('hidden');
+
+            q.options.forEach((option, optionIndex) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.dataset.index = optionIndex;
+                button.className = "w-full p-4 border border-gray-300 rounded-lg text-left transition duration-200 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400";
+                button.addEventListener('click', selectAnswer);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        // Fungsi apabila jawapan dipilih
+        function selectAnswer(event) {
+            const selectedButton = event.target;
+            const selectedIndex = parseInt(selectedButton.dataset.index);
+            const correctIndex = allQuestions[currentQuestionIndex].answer;
+
+            const allOptionButtons = optionsContainer.querySelectorAll('button');
+            allOptionButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled-option');
+            });
+
+            if (selectedIndex === correctIndex) {
+                score++;
+                selectedButton.classList.add('correct-answer');
+                feedbackMessage.textContent = "Betul!";
+                feedbackMessage.classList.add('text-green-600');
+            } else {
+                selectedButton.classList.add('wrong-answer');
+                allOptionButtons[correctIndex].classList.add('correct-answer');
+                feedbackMessage.textContent = `Salah. Jawapan yang betul ialah: ${allQuestions[currentQuestionIndex].options[correctIndex]}`;
+                feedbackMessage.classList.add('text-red-600');
+            }
+            nextButton.classList.remove('hidden');
+        }
+
+        // Fungsi untuk ke soalan seterusnya
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < allQuestions.length) {
+                loadQuestion(currentQuestionIndex);
+            } else {
+                showResults();
+            }
+        }
+
+        // Fungsi untuk memaparkan skrin keputusan
+        async function showResults() {
+            const percentage = Math.round((score / allQuestions.length) * 100);
+            const anonName = generateAnonymousName();
+            
+            resultGreeting.textContent = `Tahniah, ${userName}!`;
+            resultScore.textContent = `${score} / ${allQuestions.length}`;
+            resultPercentage.textContent = `(${percentage}%)`;
+            anonNameDisplay.textContent = `Nama anda di Leaderboard: ${anonName}`;
+
+            if (percentage >= 80) {
+                resultFeedback.textContent = "Cemerlang! Pengetahuan anda amat mendalam.";
+                resultScore.classList.add('text-green-600');
+            } else if (percentage >= 50) {
+                resultFeedback.textContent = "Baik! Teruskan usaha anda.";
+                resultScore.classList.add('text-yellow-600');
+            } else {
+                resultFeedback.textContent = "Perlu usaha lagi. Cuba sekali lagi!";
+                resultScore.classList.add('text-red-600');
+            }
+
+            // Semak status admin
+            checkAdminStatus();
+
+            // Simpan ke Firestore
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const submissionsCol = collection(db, `artifacts/${appId}/public/data/quizSubmissions`);
+                await addDoc(submissionsCol, {
+                    name: userName,
+                    anonymousName: anonName,
+                    score: score,
+                    percentage: percentage,
+                    totalQuestions: allQuestions.length,
+                    timestamp: serverTimestamp()
+                });
+                console.log("Skor berjaya disimpan!");
+            } catch (e) {
+                console.error("Gagal menyimpan skor: ", e);
+            }
+
+            showScreen('result-screen');
+        }
+
+        // Fungsi untuk memaparkan leaderboard
+        function showLeaderboard() {
+            showScreen('leaderboard-screen');
+            leaderboardList.innerHTML = `<p class="text-gray-500">Memuatkan data...</p>`;
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const submissionsCol = collection(db, `artifacts/${appId}/public/data/quizSubmissions`);
+            const q = query(submissionsCol); // Seperti yang diminta, tidak menggunakan orderBy
+
+            // Hentikan listener lama jika ada
+            if (submissionsListener) submissionsListener();
+
+            submissionsListener = onSnapshot(q, (querySnapshot) => {
+                let submissions = [];
+                querySnapshot.forEach((doc) => {
+                    submissions.push({ id: doc.id, ...doc.data() }); // Simpan ID dokumen
+                });
+
+                submissions.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score; // Susun ikut skor
+                    }
+                    return a.timestamp - b.timestamp; // Jika sama, yang lama di atas
+                });
+
+                leaderboardList.innerHTML = ""; // Kosongkan senarai
+                
+                if (submissions.length === 0) {
+                    leaderboardList.innerHTML = `<p class="text-gray-500">Tiada data lagi.</p>`;
+                    return;
+                }
+
+                const top10 = submissions.slice(0, 10);
+                top10.forEach((sub, index) => {
+                    const li = document.createElement('div');
+                    li.className = "p-3 bg-gray-50 rounded-lg flex justify-between items-center";
+                    li.innerHTML = `
+                        <span class="font-medium text-gray-800">${index + 1}. ${sub.anonymousName}</span>
+                        <span class="font-bold text-blue-600">${sub.score}/${sub.totalQuestions} (${sub.percentage}%)</span>
+                    `;
+                    leaderboardList.appendChild(li);
+                });
+            }, (error) => {
+                console.error("Ralat mendapatkan data leaderboard: ", error);
+                leaderboardList.innerHTML = `<p class="text-red-500">Gagal memuatkan data.</p>`;
+            });
+        }
+        
+        // Fungsi untuk memaparkan panel admin
+        function showAdminPanel() {
+            showScreen('admin-screen');
+            adminList.innerHTML = `<p class="text-gray-500">Memuatkan data...</p>`;
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const submissionsCol = collection(db, `artifacts/${appId}/public/data/quizSubmissions`);
+            const q = query(submissionsCol); // Tidak menggunakan orderBy
+
+            if (submissionsListener) submissionsListener();
+
+            submissionsListener = onSnapshot(q, (querySnapshot) => {
+                let submissions = [];
+                querySnapshot.forEach((doc) => {
+                    submissions.push(doc.data());
+                });
+
+                submissions.sort((a, b) => b.timestamp - a.timestamp); // Susun ikut yang terbaru
+
+                adminList.innerHTML = "";
+                
+                if (submissions.length === 0) {
+                    adminList.innerHTML = `<p class="text-gray-500">Tiada data lagi.</p>`;
+                    return;
+                }
+
+                submissions.forEach((sub, index) => {
+                    const li = document.createElement('div');
+                    li.className = "p-3 bg-gray-50 rounded-lg";
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-medium text-gray-800">${index + 1}. ${sub.name}</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-blue-600">${sub.score}/${sub.totalQuestions} (${sub.percentage}%)</span>
+                                <button data-id="${sub.id}" class="delete-button">Padam</button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">Nama Rawak: ${sub.anonymousName}</p>
+                        <p class="text-xs text-gray-500">Tarikh: ${sub.timestamp ? new Date(sub.timestamp.seconds * 1000).toLocaleString() : 'N/A'}</p>
+                    `;
+                    adminList.appendChild(li);
+                });
+            }, (error) => {
+                console.error("Ralat mendapatkan data admin: ", error);
+                adminList.innerHTML = `<p class="text-red-500">Gagal memuatkan data.</p>`;
+            });
+        }
+        
+        // Fungsi baru untuk memadam penyerahan
+        async function deleteSubmission(submissionId) {
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const docRef = doc(db, `artifacts/${appId}/public/data/quizSubmissions`, submissionId);
+                await deleteDoc(docRef);
+                console.log("Penyerahan berjaya dipadam:", submissionId);
+            } catch (error) {
+                console.error("Gagal memadam penyerahan: ", error);
+            }
+        }
+
+        // Fungsi untuk menyemak status admin
+        function checkAdminStatus() {
+            if (sessionStorage.getItem('isAdmin') === 'true') {
+                adminPanelButton.classList.remove('hidden');
+            } else {
+                adminPanelButton.classList.add('hidden');
+            }
+        }
+
+        // Fungsi untuk memulakan semula kuiz
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userName = "";
+            nameInput.value = "";
+            
+            // Hentikan listener jika ada
+            if (submissionsListener) {
+                submissionsListener();
+                submissionsListener = null;
+            }
+            
+            showScreen('start-screen');
+            resultScore.className = "text-6xl font-extrabold text-blue-600 my-2";
+        }
+
+        // --- TAMBAH EVENT LISTENERS ---
+        startButton.addEventListener('click', startQuiz);
+        nextButton.addEventListener('click', nextQuestion);
+        restartButton.addEventListener('click', restartQuiz);
+        leaderboardButton.addEventListener('click', showLeaderboard);
+        adminPanelButton.addEventListener('click', showAdminPanel);
+
+        // Tambah event listener untuk butang padam (event delegation)
+        adminList.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-button')) {
+                const id = e.target.dataset.id;
+                deleteSubmission(id);
+            }
+        });
+
+        backButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (submissionsListener) { // Hentikan listener bila kembali
+                    submissionsListener();
+                    submissionsListener = null;
+                }
+                showScreen('result-screen');
+            });
+        });
+
+        // Event listener untuk modal admin
+        adminToggleButton.addEventListener('click', () => {
+            adminModal.classList.remove('hidden');
+            adminPasswordInput.value = "";
+            adminError.classList.add('hidden');
+        });
+
+        adminCancelButton.addEventListener('click', () => {
+            adminModal.classList.add('hidden');
+        });
+
+        adminLoginButton.addEventListener('click', () => {
+            const pass = adminPasswordInput.value;
+            if (pass === 'admin123') { // Kata laluan mudah
+                sessionStorage.setItem('isAdmin', 'true');
+                adminModal.classList.add('hidden');
+                showAdminPanel(); // Terus tunjuk panel admin
+            } else {
+                adminError.classList.remove('hidden');
+            }
+        });
+
+        // Benarkan 'Enter' pada input nama
+        nameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startQuiz();
+            }
+        });
+        
+        // Benarkan 'Enter' pada input kata laluan admin
+        adminPasswordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                adminLoginButton.click();
+            }
+        });
+
+        // --- MULAKAN APP ---
+        initializeFirebase();
+        showScreen('start-screen'); // Mula di skrin permulaan
+
+    </script>
+</body>
+</html>
+
+
+
